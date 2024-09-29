@@ -13,6 +13,27 @@ function TypingTest() {
   const [isFinished, setIsFinished] = useState(false)
   const inputRef = useRef(null)
 
+  const saveHighScore = (wpm, accuracy) => {
+    const highScores = JSON.parse(localStorage.getItem('highScores')) || []
+    highScores.push({ wpm, accuracy })
+    highScores.sort((a, b) => b.wpm - a.wpm)
+    localStorage.setItem('highScores', JSON.stringify(highScores.slice(0, 5)))
+  }
+  
+  // Update the handleInputChange function
+  const handleInputChange = (e) => {
+    const value = e.target.value
+    setUserInput(value)
+  
+    if (value === text) {
+      setEndTime(Date.now())
+      setIsFinished(true)
+      const wpm = calculateWPM()
+      const accuracy = calculateAccuracy()
+      saveHighScore(wpm, accuracy)
+    }
+  }
+
   useEffect(() => {
     setText(generateParagraph(difficulty))
   }, [difficulty])
@@ -25,15 +46,6 @@ function TypingTest() {
     inputRef.current.focus()
   }
 
-  const handleInputChange = (e) => {
-    const value = e.target.value
-    setUserInput(value)
-
-    if (value === text) {
-      setEndTime(Date.now())
-      setIsFinished(true)
-    }
-  }
 
   const calculateWPM = () => {
     if (startTime && endTime) {
