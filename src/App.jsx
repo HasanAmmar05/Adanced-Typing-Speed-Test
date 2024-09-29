@@ -16,7 +16,7 @@ function App() {
     localStorage.setItem('theme', isDarkMode ? 'dark' : 'light')
   }, [isDarkMode])
 
-  
+
   return (
     <div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
       <div className="container mx-auto px-4 py-8 bg-gradient-to-b from-white to-gray-100 dark:from-gray-800 dark:to-gray-900 text-gray-800 dark:text-white transition-colors duration-200 min-h-screen">
@@ -31,5 +31,6 @@ function App() {
       </div>
     </div>
   )
+}
 
 export default App
