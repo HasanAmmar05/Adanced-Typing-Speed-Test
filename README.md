@@ -2,6 +2,9 @@
 
 An interactive and feature-rich typing speed test application built with React, Vite, and Tailwind CSS.
 
+## Website Link:
+https://typing-speed-test-azure.vercel.app/
+
 ## Features
 
 - Real-time typing speed (WPM) and accuracy calculation
@@ -70,11 +73,3 @@ An interactive and feature-rich typing speed test application built with React, 
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- [Faker.js](https://fakerjs.dev/) for generating random text
-- [Heroicons](https://heroicons.com/) for the beautiful icons
