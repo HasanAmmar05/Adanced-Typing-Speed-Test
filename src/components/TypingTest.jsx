@@ -4,9 +4,11 @@ import Timer from './Timer'
 import Results from './Results'
 import DifficultySelector from './DifficultySelector'
 import FocusMode from './FocusMode'
+import HighScores from './HighScores'
 import { generateParagraph } from '../utils/textGenerator'
 import { analyzeText, calculateDifficulty } from '../utils/nlpUtils'
 import { Chart } from 'react-chartjs-2'
+import { VolumeX, Volume2 } from 'lucide-react'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -42,10 +44,11 @@ function TypingTest() {
   const [isFocusMode, setIsFocusMode] = useState(false)
   const [wordStreak, setWordStreak] = useState(0)
   const [maxWordStreak, setMaxWordStreak] = useState(0)
+  const [isSoundEnabled, setIsSoundEnabled] = useState(true)
   const inputRef = useRef(null)
   const intervalRef = useRef(null)
 
-  const keySound = new Audio('/key-press.mp3')
+  const keySound = new Audio("Key_Press_Sound.wav")
 
   const calculateTime = useCallback((wordCount) => {
     const baseTime = 30 // Base time for 50 words
@@ -104,8 +107,10 @@ function TypingTest() {
     const value = e.target.value
     setUserInput(value)
 
-    keySound.currentTime = 0
-    keySound.play()
+    if (isSoundEnabled) {
+      keySound.currentTime = 0
+      keySound.play()
+    }
 
     const words = text.split(' ')
     const typedWords = value.split(' ')
@@ -154,6 +159,11 @@ function TypingTest() {
     localStorage.setItem('highScores', JSON.stringify(updatedHighScores))
   }
 
+  const resetHighScores = () => {
+    setHighScores([])
+    localStorage.removeItem('highScores')
+  }
+
   const chartOptions = {
     responsive: true,
     plugins: {
@@ -189,12 +199,21 @@ function TypingTest() {
       <div className="flex justify-between items-center mb-4">
         <DifficultySelector difficulty={difficulty} setDifficulty={setDifficulty} />
         <Timer timeLeft={timeLeft} />
-        <button
-          className="px-4 py-2 bg-purple-500 text-white rounded-full hover:bg-purple-600 transition-colors duration-200"
-          onClick={() => setIsFocusMode(!isFocusMode)}
-        >
-          {isFocusMode ? 'Exit Focus Mode' : 'Enter Focus Mode'}
-        </button>
+        <div className="flex items-center space-x-4">
+          <button
+            className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200"
+            onClick={() => setIsSoundEnabled(!isSoundEnabled)}
+            aria-label={isSoundEnabled ? "Disable sound" : "Enable sound"}
+          >
+            {isSoundEnabled ? <Volume2 size={24} /> : <VolumeX size={24} />}
+          </button>
+          <button
+            className="px-4 py-2 bg-purple-500 text-white rounded-full hover:bg-purple-600 transition-colors duration-200"
+            onClick={() => setIsFocusMode(!isFocusMode)}
+          >
+            {isFocusMode ? 'Exit Focus Mode' : 'Enter Focus Mode'}
+          </button>
+        </div>
       </div>
       {textAnalysis && (
         <motion.div 
@@ -268,36 +287,7 @@ function TypingTest() {
           <Chart type="line" options={chartOptions} data={chartData} />
         </motion.div>
       )}
-      <motion.div
-        className="mt-8"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1, duration: 0.5 }}
-      >
-        <h2 className="text-2xl font-bold mb-4">High Scores</h2>
-        <div className="bg-white dark:bg-gray-700 rounded-lg shadow-md overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gray-100 dark:bg-gray-800">
-                <th className="px-4 py-2 text-left">Rank</th>
-                <th className="px-4 py-2 text-left">WPM</th>
-                <th className="px-4 py-2 text-left">Accuracy</th>
-                <th className="px-4 py-2 text-left">Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {highScores.map((score, index) => (
-                <tr key={index} className="border-t border-gray-200 dark:border-gray-600">
-                  <td className="px-4 py-2">{index + 1}</td>
-                  <td className="px-4 py-2 font-semibold">{score.wpm} WPM</td>
-                  <td className="px-4 py-2">{score.accuracy}%</td>
-                  <td className="px-4 py-2">{new Date(score.date).toLocaleDateString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </motion.div>
+      <HighScores highScores={highScores} resetHighScores={resetHighScores} />
       <FocusMode
         isActive={isFocusMode}
         text={text}

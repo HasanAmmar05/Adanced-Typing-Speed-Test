@@ -1,22 +1,23 @@
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import { motion } from 'framer-motion'
 
-function HighScores() {
-  const [highScores, setHighScores] = useState([])
-
-  useEffect(() => {
-    const savedScores = JSON.parse(localStorage.getItem('highScores')) || []
-    setHighScores(savedScores)
-  }, [])
-
+function HighScores({ highScores, resetHighScores }) {
   return (
-    <motion.div 
+    <motion.div
       className="mt-8"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.2 }}
+      transition={{ delay: 1, duration: 0.5 }}
     >
-      <h2 className="text-2xl font-bold mb-4">High Scores</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">High Scores</h2>
+        <button
+          className="px-4 py-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors duration-200"
+          onClick={resetHighScores}
+        >
+          Reset High Scores
+        </button>
+      </div>
       <div className="bg-white dark:bg-gray-700 rounded-lg shadow-md overflow-hidden">
         <table className="w-full">
           <thead>
