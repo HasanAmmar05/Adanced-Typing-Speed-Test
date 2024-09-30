@@ -309,4 +309,4 @@ function TypingTest() {
   )
 }
 
-export default Typing
+export default TypingTest
