@@ -16,6 +16,42 @@ function TypingTest() {
   const [textAnalysis, setTextAnalysis] = useState(null)
   const inputRef = useRef(null)
 
+  const calculateTime = (wordCount) => {
+    const baseTime = 30 // Base time for 50 words
+    const baseWords = 50
+    return Math.max(30, Math.round((wordCount / baseWords) * baseTime))
+  }
+
+  useEffect(() => {
+    const newText = generateParagraph(difficulty)
+    setText(newText)
+    const analysis = analyzeText(newText)
+    setTextAnalysis(analysis)
+    setTimeLeft(calculateTime(analysis.wordCount))
+  }, [difficulty])
+
+  useEffect(() => {
+    let interval = null
+    if (isActive && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft(timeLeft => timeLeft - 1)
+      }, 1000)
+    } else if (timeLeft === 0) {
+      clearInterval(interval)
+      setIsFinished(true)
+      saveHighScore()
+    }
+    return () => clearInterval(interval)
+  }, [isActive, timeLeft])
+
+  const handleStart = () => {
+    setTimeLeft(calculateTime(textAnalysis.wordCount))
+    setUserInput('')
+    setIsActive(true)
+    setIsFinished(false)
+    inputRef.current.focus()
+  }
+
   useEffect(() => {
     const newText = generateParagraph(difficulty)
     setText(newText)
@@ -36,13 +72,6 @@ function TypingTest() {
     return () => clearInterval(interval)
   }, [isActive, timeLeft])
 
-  const handleStart = () => {
-    setTimeLeft(60)
-    setUserInput('')
-    setIsActive(true)
-    setIsFinished(false)
-    inputRef.current.focus()
-  }
 
   const handleInputChange = (e) => {
     const value = e.target.value
