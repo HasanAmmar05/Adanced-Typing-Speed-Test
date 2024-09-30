@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import TypingTest from './components/TypingTest'
-import HighScores from './components/HighScores'
 import ThemeToggle from './components/ThemeToggle'
 
 function App() {
@@ -36,7 +35,6 @@ function App() {
           className="max-w-4xl mx-auto"
         >
           <TypingTest />
-          <HighScores />
         </motion.main>
       </div>
     </div>
