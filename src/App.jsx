@@ -19,7 +19,7 @@ function App() {
 
   return (
     <div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
-      <div className="container mx-auto px-4 py-8 bg-gradient-to-b from-white to-gray-100 dark:from-gray-800 dark:to-gray-900 text-gray-800 dark:text-white transition-colors duration-200 min-h-screen">
+      <div className="container mx-auto px-4 py-8 bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 text-gray-800 dark:text-white transition-colors duration-200 min-h-screen">
         <motion.header 
           className="flex justify-between items-center mb-8"
           initial={{ opacity: 0, y: -50 }}
