@@ -34,7 +34,7 @@ function TypingTest() {
     let interval = null
     if (isActive && timeLeft > 0) {
       interval = setInterval(() => {
-        setTimeLeft(timeLeft => timeLeft - 1)
+        setTimeLeft((prevTimeLeft) => prevTimeLeft - 1)
       }, 1000)
     } else if (timeLeft === 0) {
       clearInterval(interval)
@@ -52,36 +52,21 @@ function TypingTest() {
     inputRef.current.focus()
   }
 
-  useEffect(() => {
-    const newText = generateParagraph(difficulty)
-    setText(newText)
-    setTextAnalysis(analyzeText(newText))
-  }, [difficulty])
-
-  useEffect(() => {
-    let interval = null
-    if (isActive && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft(timeLeft => timeLeft - 1)
-      }, 1000)
-    } else if (timeLeft === 0) {
-      clearInterval(interval)
-      setIsFinished(true)
-      saveHighScore()
-    }
-    return () => clearInterval(interval)
-  }, [isActive, timeLeft])
-
-
   const handleInputChange = (e) => {
     const value = e.target.value
     setUserInput(value)
+
+    if (value === text) {
+      setIsActive(false)
+      setIsFinished(true)
+      saveHighScore()
+    }
   }
 
   const calculateWPM = () => {
     const words = userInput.trim().split(/\s+/).length
-    const minutes = (60 - timeLeft) / 60
-    return Math.round(words / minutes)
+    const minutes = (calculateTime(textAnalysis.wordCount) - timeLeft) / 60
+    return Math.round(words / minutes) || 0
   }
 
   const calculateAccuracy = () => {
@@ -93,7 +78,8 @@ function TypingTest() {
     const wpm = calculateWPM()
     const accuracy = calculateAccuracy()
     const highScores = JSON.parse(localStorage.getItem('highScores')) || []
-    highScores.push({ wpm, accuracy })
+    const newScore = { wpm, accuracy, date: new Date().toISOString() }
+    highScores.push(newScore)
     highScores.sort((a, b) => b.wpm - a.wpm)
     localStorage.setItem('highScores', JSON.stringify(highScores.slice(0, 5)))
   }
@@ -105,29 +91,34 @@ function TypingTest() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <DifficultySelector difficulty={difficulty} setDifficulty={setDifficulty} />
+      <div className="flex justify-between items-center mb-4">
+        <DifficultySelector difficulty={difficulty} setDifficulty={setDifficulty} />
+        <Timer timeLeft={timeLeft} />
+      </div>
       {textAnalysis && (
         <motion.div 
-          className="mt-4 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg"
+          className="mb-4 p-4 bg-white dark:bg-gray-700 rounded-lg shadow-md"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.5 }}
         >
           <h3 className="text-lg font-semibold mb-2">Text Analysis</h3>
-          <p>Word Count: {textAnalysis.wordCount}</p>
-          <p>Unique Word Count: {textAnalysis.uniqueWordCount}</p>
-          <p>Average Word Length: {textAnalysis.averageWordLength.toFixed(2)}</p>
-          <p>Lexical Density: {textAnalysis.lexicalDensity.toFixed(2)}</p>
-          <p>Calculated Difficulty: {calculateDifficulty(text)}</p>
+          <div className="grid grid-cols-2 gap-2">
+            <p>Word Count: {textAnalysis.wordCount}</p>
+            <p>Unique Words: {textAnalysis.uniqueWordCount}</p>
+            <p>Avg. Word Length: {textAnalysis.averageWordLength.toFixed(2)}</p>
+            <p>Lexical Density: {textAnalysis.lexicalDensity.toFixed(2)}</p>
+          </div>
+          <p className="mt-2">Calculated Difficulty: <span className="font-semibold capitalize">{calculateDifficulty(text)}</span></p>
         </motion.div>
       )}
       <motion.div 
-        className="mt-4 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg"
+        className="mb-4 p-4 bg-white dark:bg-gray-700 rounded-lg shadow-md"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.4, duration: 0.5 }}
       >
-        <p className="text-lg mb-4 whitespace-pre-wrap">
+        <p className="text-lg mb-4 whitespace-pre-wrap leading-relaxed">
           {text.split('').map((char, index) => {
             let color = ''
             if (index < userInput.length) {
@@ -138,7 +129,7 @@ function TypingTest() {
         </p>
         <textarea
           ref={inputRef}
-          className="w-full p-2 border rounded dark:bg-gray-600 dark:text-white"
+          className="w-full p-2 border rounded dark:bg-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           value={userInput}
           onChange={handleInputChange}
           placeholder="Start typing here..."
@@ -146,19 +137,18 @@ function TypingTest() {
         />
       </motion.div>
       <motion.div 
-        className="mt-4 flex justify-between items-center"
+        className="flex justify-center"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.6, duration: 0.5 }}
       >
         <button
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-200"
+          className="px-6 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
           onClick={handleStart}
           disabled={isActive && !isFinished}
         >
           {isActive && !isFinished ? 'Typing...' : 'Start Test'}
         </button>
-        <Timer timeLeft={timeLeft} />
       </motion.div>
       {isFinished && (
         <Results wpm={calculateWPM()} accuracy={calculateAccuracy()} />

@@ -35,6 +35,7 @@ function App() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.5 }}
+          className="max-w-4xl mx-auto"
         >
           <TypingTest />
           <HighScores />
