@@ -1,12 +1,12 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 
-function FocusMode({ isActive, text, userInput, inputRef, handleInputChange }) {
+function FocusMode({ isActive, text, userInput, inputRef, handleInputChange, toggleFocusMode }) {
   if (!isActive) return null
 
   return (
     <motion.div
-      className="fixed inset-0 bg-white dark:bg-gray-900 z-50 flex items-center justify-center"
+      className="fixed inset-0 bg-white dark:bg-gray-900 z-50 flex flex-col items-center justify-center"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -30,6 +30,12 @@ function FocusMode({ isActive, text, userInput, inputRef, handleInputChange }) {
           autoFocus
         />
       </div>
+      <button
+        className="mt-4 px-6 py-2 bg-purple-500 text-white rounded-full hover:bg-purple-600 transition-colors duration-200"
+        onClick={toggleFocusMode}
+      >
+        Leave Focus Mode
+      </button>
     </motion.div>
   )
 }
