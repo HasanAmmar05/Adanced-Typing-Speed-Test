@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import Timer from './Timer'
 import Results from './Results'
 import DifficultySelector from './DifficultySelector'
+import FocusMode from './FocusMode'
 import { generateParagraph } from '../utils/textGenerator'
 import { analyzeText, calculateDifficulty } from '../utils/nlpUtils'
 import { Chart } from 'react-chartjs-2'
@@ -37,14 +38,14 @@ function TypingTest() {
   const [textAnalysis, setTextAnalysis] = useState(null)
   const [wpmData, setWpmData] = useState([])
   const [mistakes, setMistakes] = useState(0)
+  const [highScores, setHighScores] = useState([])
+  const [isFocusMode, setIsFocusMode] = useState(false)
+  const [wordStreak, setWordStreak] = useState(0)
+  const [maxWordStreak, setMaxWordStreak] = useState(0)
   const inputRef = useRef(null)
   const intervalRef = useRef(null)
 
-
-  useEffect(() => {
-    const savedScores = JSON.parse(localStorage.getItem('highScores')) || []
-    setHighScores(savedScores)
-  }, [])
+  const keySound = new Audio('/key-press.mp3')
 
   const calculateTime = useCallback((wordCount) => {
     const baseTime = 30 // Base time for 50 words
@@ -57,7 +58,7 @@ function TypingTest() {
     setText(newText)
     const analysis = analyzeText(newText)
     setTextAnalysis(analysis)
-    setTimeLeft(calculateTime(analysis ? analysis.wordCount : 0))
+    setTimeLeft(calculateTime(analysis.wordCount))
   }, [difficulty, calculateTime])
 
   useEffect(() => {
@@ -82,13 +83,20 @@ function TypingTest() {
     return () => clearInterval(intervalRef.current)
   }, [isActive, timeLeft])
 
+  useEffect(() => {
+    const savedScores = JSON.parse(localStorage.getItem('highScores')) || []
+    setHighScores(savedScores)
+  }, [])
+
   const handleStart = () => {
-    setTimeLeft(calculateTime(textAnalysis ? textAnalysis.wordCount : 0))
+    setTimeLeft(calculateTime(textAnalysis.wordCount))
     setUserInput('')
     setIsActive(true)
     setIsFinished(false)
     setWpmData([])
     setMistakes(0)
+    setWordStreak(0)
+    setMaxWordStreak(0)
     inputRef.current.focus()
   }
 
@@ -96,11 +104,26 @@ function TypingTest() {
     const value = e.target.value
     setUserInput(value)
 
-    // Count mistakes
-    const newMistakes = value.split('').reduce((count, char, index) => {
-      return count + (char !== text[index] ? 1 : 0)
-    }, 0)
+    keySound.currentTime = 0
+    keySound.play()
+
+    const words = text.split(' ')
+    const typedWords = value.split(' ')
+    let newMistakes = 0
+    let newWordStreak = 0
+
+    for (let i = 0; i < typedWords.length; i++) {
+      if (typedWords[i] === words[i]) {
+        newWordStreak++
+      } else {
+        newMistakes += 1
+        break
+      }
+    }
+
     setMistakes(newMistakes)
+    setWordStreak(newWordStreak)
+    setMaxWordStreak(Math.max(maxWordStreak, newWordStreak))
 
     if (value === text) {
       clearInterval(intervalRef.current)
@@ -112,7 +135,7 @@ function TypingTest() {
 
   const calculateWPM = () => {
     const words = userInput.trim().split(/\s+/).length
-    const minutes = (calculateTime(textAnalysis ? textAnalysis.wordCount : 0) - timeLeft) / 60
+    const minutes = (calculateTime(textAnalysis.wordCount) - timeLeft) / 60
     return Math.round(words / minutes) || 0
   }
 
@@ -130,7 +153,6 @@ function TypingTest() {
     setHighScores(updatedHighScores)
     localStorage.setItem('highScores', JSON.stringify(updatedHighScores))
   }
-
 
   const chartOptions = {
     responsive: true,
@@ -164,7 +186,75 @@ function TypingTest() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      {/* ... (previous JSX) */}
+      <div className="flex justify-between items-center mb-4">
+        <DifficultySelector difficulty={difficulty} setDifficulty={setDifficulty} />
+        <Timer timeLeft={timeLeft} />
+        <button
+          className="px-4 py-2 bg-purple-500 text-white rounded-full hover:bg-purple-600 transition-colors duration-200"
+          onClick={() => setIsFocusMode(!isFocusMode)}
+        >
+          {isFocusMode ? 'Exit Focus Mode' : 'Enter Focus Mode'}
+        </button>
+      </div>
+      {textAnalysis && (
+        <motion.div 
+          className="mb-4 p-4 bg-gray-800 rounded-lg shadow-md"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+        >
+          <h3 className="text-lg font-semibold mb-2 text-white">Text Analysis</h3>
+          <div className="grid grid-cols-2 gap-2 text-gray-300">
+            <p>Word Count: {textAnalysis.wordCount}</p>
+            <p>Unique Words: {textAnalysis.uniqueWordCount}</p>
+            <p>Avg. Word Length: {textAnalysis.averageWordLength.toFixed(2)}</p>
+            <p>Lexical Density: {textAnalysis.lexicalDensity.toFixed(2)}</p>
+          </div>
+          <p className="mt-2 text-white">Calculated Difficulty: <span className="font-semibold capitalize">{calculateDifficulty(text)}</span></p>
+        </motion.div>
+      )}
+      <motion.div 
+        className="mb-4 p-4 bg-gray-800 rounded-lg shadow-md"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.4, duration: 0.5 }}
+      >
+        <p className="text-lg mb-4 whitespace-pre-wrap leading-relaxed text-gray-300">
+          {text.split('').map((char, index) => {
+            let color = 'text-gray-300'
+            if (index < userInput.length) {
+              color = char === userInput[index] ? 'text-green-500' : 'text-red-500'
+            }
+            return <span key={index} className={color}>{char}</span>
+          })}
+        </p>
+        <textarea
+          ref={inputRef}
+          className="w-full p-2 border rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          value={userInput}
+          onChange={handleInputChange}
+          placeholder="Start typing here..."
+          disabled={!isActive || isFinished}
+        />
+      </motion.div>
+      <motion.div 
+        className="flex justify-between items-center mb-4"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.6, duration: 0.5 }}
+      >
+        <button
+          className="px-6 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+          onClick={handleStart}
+          disabled={isActive && !isFinished}
+        >
+          {isActive && !isFinished ? 'Typing...' : 'Start Test'}
+        </button>
+        <div className="text-lg">
+          <span className="font-bold">Word Streak:</span> {wordStreak}
+          <span className="ml-4 font-bold">Max Streak:</span> {maxWordStreak}
+        </div>
+      </motion.div>
       {isFinished && (
         <Results wpm={calculateWPM()} accuracy={calculateAccuracy()} />
       )}
@@ -208,8 +298,15 @@ function TypingTest() {
           </table>
         </div>
       </motion.div>
+      <FocusMode
+        isActive={isFocusMode}
+        text={text}
+        userInput={userInput}
+        inputRef={inputRef}
+        handleInputChange={handleInputChange}
+      />
     </motion.div>
   )
 }
 
-export default TypingTest
+export default Typing
