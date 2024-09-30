@@ -29,12 +29,12 @@ export function calculateDifficulty(text) {
   if (!text) return 'easy';
   const analysis = analyzeText(text);
   if (!analysis) return 'easy';
-  
+
   const { wordCount, uniqueWordCount, averageWordLength, lexicalDensity, sentenceCount, syllableCount } = analysis;
-  
+
   // Calculate Flesch-Kincaid Grade Level
   const fkgl = 0.39 * (wordCount / sentenceCount) + 11.8 * (syllableCount / wordCount) - 15.59;
-  
+
   // Calculate Gunning Fog Index
   const complexWords = text.split(/\s+/).filter(word => countSyllables(word) > 2).length;
   const gfi = 0.4 * ((wordCount / sentenceCount) + 100 * (complexWords / wordCount));
