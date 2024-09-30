@@ -40,6 +40,12 @@ function TypingTest() {
   const inputRef = useRef(null)
   const intervalRef = useRef(null)
 
+
+  useEffect(() => {
+    const savedScores = JSON.parse(localStorage.getItem('highScores')) || []
+    setHighScores(savedScores)
+  }, [])
+
   const calculateTime = useCallback((wordCount) => {
     const baseTime = 30 // Base time for 50 words
     const baseWords = 50
@@ -119,12 +125,12 @@ function TypingTest() {
   const saveHighScore = () => {
     const wpm = calculateWPM()
     const accuracy = calculateAccuracy()
-    const highScores = JSON.parse(localStorage.getItem('highScores')) || []
     const newScore = { wpm, accuracy, date: new Date().toISOString(), difficulty }
-    highScores.push(newScore)
-    highScores.sort((a, b) => b.wpm - a.wpm)
-    localStorage.setItem('highScores', JSON.stringify(highScores.slice(0, 5)))
+    const updatedHighScores = [...highScores, newScore].sort((a, b) => b.wpm - a.wpm).slice(0, 5)
+    setHighScores(updatedHighScores)
+    localStorage.setItem('highScores', JSON.stringify(updatedHighScores))
   }
+
 
   const chartOptions = {
     responsive: true,
@@ -158,65 +164,7 @@ function TypingTest() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <div className="flex justify-between items-center mb-4">
-        <DifficultySelector difficulty={difficulty} setDifficulty={setDifficulty} />
-        <Timer timeLeft={timeLeft} />
-      </div>
-      {textAnalysis && (
-        <motion.div 
-          className="mb-4 p-4 bg-gray-800 rounded-lg shadow-md"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-        >
-          <h3 className="text-lg font-semibold mb-2 text-white">Text Analysis</h3>
-          <div className="grid grid-cols-2 gap-2 text-gray-300">
-            <p>Word Count: {textAnalysis.wordCount}</p>
-            <p>Unique Words: {textAnalysis.uniqueWordCount}</p>
-            <p>Avg. Word Length: {textAnalysis.averageWordLength.toFixed(2)}</p>
-            <p>Lexical Density: {textAnalysis.lexicalDensity.toFixed(2)}</p>
-          </div>
-          <p className="mt-2 text-white">Calculated Difficulty: <span className="font-semibold capitalize">{calculateDifficulty(text)}</span></p>
-        </motion.div>
-      )}
-      <motion.div 
-        className="mb-4 p-4 bg-gray-800 rounded-lg shadow-md"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.4, duration: 0.5 }}
-      >
-        <p className="text-lg mb-4 whitespace-pre-wrap leading-relaxed text-gray-300">
-          {text.split('').map((char, index) => {
-            let color = 'text-gray-300'
-            if (index < userInput.length) {
-              color = char === userInput[index] ? 'text-green-500' : 'text-red-500'
-            }
-            return <span key={index} className={color}>{char}</span>
-          })}
-        </p>
-        <textarea
-          ref={inputRef}
-          className="w-full p-2 border rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={userInput}
-          onChange={handleInputChange}
-          placeholder="Start typing here..."
-          disabled={!isActive || isFinished}
-        />
-      </motion.div>
-      <motion.div 
-        className="flex justify-center mb-4"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.6, duration: 0.5 }}
-      >
-        <button
-          className="px-6 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-          onClick={handleStart}
-          disabled={isActive && !isFinished}
-        >
-          {isActive && !isFinished ? 'Typing...' : 'Start Test'}
-        </button>
-      </motion.div>
+      {/* ... (previous JSX) */}
       {isFinished && (
         <Results wpm={calculateWPM()} accuracy={calculateAccuracy()} />
       )}
@@ -230,6 +178,36 @@ function TypingTest() {
           <Chart type="line" options={chartOptions} data={chartData} />
         </motion.div>
       )}
+      <motion.div
+        className="mt-8"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1, duration: 0.5 }}
+      >
+        <h2 className="text-2xl font-bold mb-4">High Scores</h2>
+        <div className="bg-white dark:bg-gray-700 rounded-lg shadow-md overflow-hidden">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-gray-100 dark:bg-gray-800">
+                <th className="px-4 py-2 text-left">Rank</th>
+                <th className="px-4 py-2 text-left">WPM</th>
+                <th className="px-4 py-2 text-left">Accuracy</th>
+                <th className="px-4 py-2 text-left">Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {highScores.map((score, index) => (
+                <tr key={index} className="border-t border-gray-200 dark:border-gray-600">
+                  <td className="px-4 py-2">{index + 1}</td>
+                  <td className="px-4 py-2 font-semibold">{score.wpm} WPM</td>
+                  <td className="px-4 py-2">{score.accuracy}%</td>
+                  <td className="px-4 py-2">{new Date(score.date).toLocaleDateString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </motion.div>
     </motion.div>
   )
 }

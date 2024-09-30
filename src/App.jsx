@@ -5,12 +5,10 @@ import HighScores from './components/HighScores'
 import ThemeToggle from './components/ThemeToggle'
 
 function App() {
-  const [isDarkMode, setIsDarkMode] = useState(false)
-
-  useEffect(() => {
+  const [isDarkMode, setIsDarkMode] = useState(() => {
     const savedTheme = localStorage.getItem('theme')
-    setIsDarkMode(savedTheme === 'dark')
-  }, [])
+    return savedTheme === 'dark'
+  })
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', isDarkMode)
