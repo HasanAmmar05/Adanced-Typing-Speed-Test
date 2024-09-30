@@ -1,25 +1,53 @@
 export function analyzeText(text) {
+  if (!text) return null;
   const words = text.trim().split(/\s+/)
   const uniqueWords = new Set(words)
+  const sentenceCount = (text.match(/[.!?]+/g) || []).length || 1
+  const syllableCount = words.reduce((count, word) => count + countSyllables(word), 0)
 
   return {
     wordCount: words.length,
     uniqueWordCount: uniqueWords.size,
     averageWordLength: words.reduce((sum, word) => sum + word.length, 0) / words.length,
-    lexicalDensity: uniqueWords.size / words.length
+    lexicalDensity: uniqueWords.size / words.length,
+    sentenceCount,
+    syllableCount,
   }
 }
 
-export function calculateDifficulty(text) {
-  const { wordCount, uniqueWordCount, averageWordLength, lexicalDensity } = analyzeText(text)
-  
-  let score = 0
-  score += wordCount > 120 ? 3 : wordCount > 80 ? 2 : wordCount > 50 ? 1 : 0
-  score += uniqueWordCount / wordCount > 0.7 ? 3 : uniqueWordCount / wordCount > 0.5 ? 2 : uniqueWordCount / wordCount > 0.3 ? 1 : 0
-  score += averageWordLength > 6 ? 3 : averageWordLength > 5 ? 2 : averageWordLength > 4 ? 1 : 0
-  score += lexicalDensity > 0.7 ? 3 : lexicalDensity > 0.5 ? 2 : lexicalDensity > 0.3 ? 1 : 0
+function countSyllables(word) {
+  if (!word) return 0;
+  word = word.toLowerCase();
+  if(word.length <= 3) { return 1; }
+  word = word.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/, '');
+  word = word.replace(/^y/, '');
+  const syllableMatches = word.match(/[aeiouy]{1,2}/g);
+  return syllableMatches ? syllableMatches.length : 1;
+}
 
-  if (score >= 9) return 'hard'
-  if (score >= 5) return 'medium'
-  return 'easy'
+export function calculateDifficulty(text) {
+  if (!text) return 'easy';
+  const analysis = analyzeText(text);
+  if (!analysis) return 'easy';
+  
+  const { wordCount, uniqueWordCount, averageWordLength, lexicalDensity, sentenceCount, syllableCount } = analysis;
+  
+  // Calculate Flesch-Kincaid Grade Level
+  const fkgl = 0.39 * (wordCount / sentenceCount) + 11.8 * (syllableCount / wordCount) - 15.59;
+  
+  // Calculate Gunning Fog Index
+  const complexWords = text.split(/\s+/).filter(word => countSyllables(word) > 2).length;
+  const gfi = 0.4 * ((wordCount / sentenceCount) + 100 * (complexWords / wordCount));
+
+  // Normalize scores
+  const normalizedFKGL = Math.min(Math.max(fkgl, 0), 18) / 18;
+  const normalizedGFI = Math.min(Math.max(gfi, 0), 20) / 20;
+  const normalizedLexicalDensity = Math.min(lexicalDensity, 1);
+
+  // Calculate final score
+  const score = (normalizedFKGL + normalizedGFI + normalizedLexicalDensity) / 3;
+
+  if (score > 0.7) return 'hard';
+  if (score > 0.4) return 'medium';
+  return 'easy';
 }
