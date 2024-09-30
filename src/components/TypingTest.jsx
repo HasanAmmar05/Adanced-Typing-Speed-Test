@@ -154,7 +154,14 @@ function TypingTest() {
     const wpm = calculateWPM()
     const accuracy = calculateAccuracy()
     const newScore = { wpm, accuracy, date: new Date().toISOString(), difficulty }
-    const updatedHighScores = [...highScores, newScore].sort((a, b) => b.wpm - a.wpm).slice(0, 5)
+    const updatedHighScores = [...highScores, newScore]
+      .sort((a, b) => b.wpm - a.wpm)
+      .filter((score, index, self) => 
+        index === self.findIndex((t) => (
+          t.wpm === score.wpm && t.accuracy === score.accuracy && t.date === score.date
+        ))
+      )
+      .slice(0, 5)
     setHighScores(updatedHighScores)
     localStorage.setItem('highScores', JSON.stringify(updatedHighScores))
   }
@@ -162,6 +169,10 @@ function TypingTest() {
   const resetHighScores = () => {
     setHighScores([])
     localStorage.removeItem('highScores')
+  }
+
+  const toggleFocusMode = () => {
+    setIsFocusMode(!isFocusMode)
   }
 
   const chartOptions = {
@@ -209,9 +220,9 @@ function TypingTest() {
           </button>
           <button
             className="px-4 py-2 bg-purple-500 text-white rounded-full hover:bg-purple-600 transition-colors duration-200"
-            onClick={() => setIsFocusMode(!isFocusMode)}
+            onClick={toggleFocusMode}
           >
-            {isFocusMode ? 'Exit Focus Mode' : 'Enter Focus Mode'}
+            {isFocusMode ? 'Leave Focus Mode' : 'Enter Focus Mode'}
           </button>
         </div>
       </div>
@@ -294,6 +305,7 @@ function TypingTest() {
         userInput={userInput}
         inputRef={inputRef}
         handleInputChange={handleInputChange}
+        toggleFocusMode={toggleFocusMode}
       />
     </motion.div>
   )
