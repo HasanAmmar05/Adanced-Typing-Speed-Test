@@ -29,12 +29,12 @@ https://typing-speed-test-azure.vercel.app/
 
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/advanced-typing-speed-test.git
+   git clone https://github.com/HasanAmmar05/typing-speed-test.git
    ```
 
 2. Navigate to the project directory:
    ```
-   cd advanced-typing-speed-test
+   cd typing-speed-test
    ```
 
 3. Install dependencies:
