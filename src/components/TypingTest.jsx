@@ -7,28 +7,11 @@ import FocusMode from './FocusMode'
 import HighScores from './HighScores'
 import { generateParagraph } from '../utils/textGenerator'
 import { analyzeText, calculateDifficulty } from '../utils/nlpUtils'
-import { Chart } from 'react-chartjs-2'
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js'
+import { Line } from 'react-chartjs-2'
 import { VolumeX, Volume2 } from 'lucide-react'
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-} from 'chart.js'
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-)
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend)
 
 function TypingTest() {
   const [text, setText] = useState('')
@@ -50,7 +33,6 @@ function TypingTest() {
 
   const keySound = new Audio('/Key_Press_Sound.wav')
 
-  
   const calculateTime = useCallback((wordCount) => {
     const baseTime = 30 // Base time for 50 words
     const baseWords = 50
@@ -187,6 +169,21 @@ function TypingTest() {
         text: 'WPM Over Time',
       },
     },
+    scales: {
+      x: {
+        type: 'category',
+        title: {
+          display: true,
+          text: 'Time (seconds)',
+        },
+      },
+      y: {
+        title: {
+          display: true,
+          text: 'WPM',
+        },
+      },
+    },
   }
 
   const chartData = {
@@ -196,6 +193,7 @@ function TypingTest() {
         label: 'WPM',
         data: wpmData,
         borderColor: 'rgb(75, 192, 192)',
+        backgroundColor: 'rgba(75, 192, 192, 0.5)',
         tension: 0.1,
       },
     ],
@@ -296,7 +294,7 @@ function TypingTest() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8, duration: 0.5 }}
         >
-          <Chart type="line" options={chartOptions} data={chartData} />
+          <Line options={chartOptions} data={chartData} />
         </motion.div>
       )}
       <HighScores highScores={highScores} resetHighScores={resetHighScores} />

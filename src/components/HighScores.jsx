@@ -7,8 +7,7 @@ function HighScores({ highScores = [], resetHighScores }) {
       className="mt-8"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 1,
-      duration: 0.5 }}
+      transition={{ delay: 1, duration: 0.5 }}
     >
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">High Scores</h2>
