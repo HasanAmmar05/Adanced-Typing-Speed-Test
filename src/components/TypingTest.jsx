@@ -48,8 +48,9 @@ function TypingTest() {
   const inputRef = useRef(null)
   const intervalRef = useRef(null)
 
-  const keySound = new Audio("Key_Press_Sound.wav")
+  const keySound = new Audio('/Key_Press_Sound.wav')
 
+  
   const calculateTime = useCallback((wordCount) => {
     const baseTime = 30 // Base time for 50 words
     const baseWords = 50
